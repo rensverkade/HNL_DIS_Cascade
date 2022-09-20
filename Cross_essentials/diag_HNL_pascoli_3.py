@@ -8,12 +8,7 @@ e_m = 0.001
 
 
 
-
-
 y_nu = np.ones((3,1))
-#print(y_nu[1][0])
-print(np.shape(y_nu), np.shape(y_nu.T))
-print(y_nu)
 N_hnl=3 # nr of HNLS
 N_d =2
 
@@ -35,39 +30,35 @@ m_D[0,2] = 0.190 #(N,3) #one Md and filled with zeros
 L[0,0] = -2.39  *10  #MEV
 L[0,1] = 19.0 *10
 L[0,2] =0.00 *10
-print(L,LR)
+
 LR[0,0] = -2.39 *10
 LR[0,1] = 19.0  *10 #MeV 
 LR[0,2] =0.00 *10
 
 mu_s = np.array([-0.0429,1.10,-1.10])*10**3
 mu = np.diag(mu_s)
-#print(mu)
 
 m_x=-1.21*10**2
 
-
 A = np.zeros((3,3))
 z = np.zeros(np.shape(m_D))
-print(m_D,z)
-#print(m_D,m_D.T,L,L.T, mu)
 
-print(np.shape(m_D.T))
+
 M = np.block([[0,0,0,z,0,0 ],
               [0,0,0,z,0,0 ],
               [0,0,0,m_D,0,0 ],
                [z.T,z.T,m_D.T,mu,L.T,LR.T ],
                [0,0,0,L,0,m_x],
                [0,0,0,LR,m_x,0]])
-print('m',M)
+
 e,v =la.eig(M)
-print(e)
+
 #input parameters theory
 
 m_D = np.array([[0.00950, -0.0347, 0.0336, 0.120],
                [0.287, 1.98, -0.635, 6.72],
                 [0.190, -3.89, -1.03, -11.4]]) #MeV
-print(m_D)
+
 m_diag = np.array([[-0.0429, -0.0900, -0.0963, 0.206],
                [1.10, 6.00, 5.07, 6.00],
                    [-1.10, -18.0, -10.1, -18.0]]) *1000 #MeV
@@ -86,6 +77,11 @@ masses = np.zeros((4,8))
 VU = np.zeros(4) #magnitude VU
 vectors = np.zeros((4,8,8))
 M = np.zeros((8,8))
+
+###--------------------------------------------------------------
+### Constructing the axial matrix (could be improved? Block)#####
+####                   and calc eig val and vectors        ######
+#################################################################
 for i in range(4):
     k =2 
     M[0,3:6] = m_D[:,i]
@@ -97,7 +93,6 @@ for i in range(4):
     M[3:6,2] = m_D[:,i]
 
 
-
     M[1+k:4+k,1+k:4+k] = np.diag(m_diag[:,i])
     M[4+k,1+k:4+k] = L_L[:,i]
     M[1+k:4+k,4+k] = L_L[:,i]
@@ -105,16 +100,16 @@ for i in range(4):
     M[1+k:4+k,5+k] = L_R[:,i]
     M[4+k,5+k] = M_X[i]
     M[5+k,4+k] = M_X[i]
-    print('m', np.round(M,2))
+
+    #eigval calc, eig vector
     e, v = la.eig(M)
-    #print('e',e)
     e = np.sqrt(e*e)
     ind_sort = np.argsort(e)
-    masses[i,:] = e[ind_sort]
-    vectors[i,:,:] = v[:,ind_sort]
-    VU[i] = la.det(v)
+    masses[i,:] = e[ind_sort] #store eigval, masses
+    vectors[i,:,:] = v[:,ind_sort] #store vectors
 
-#print(masses)
+
+    
 hf = h5.File('HNL_mass_pascoli_3.hdf5', 'w')
 hf.create_dataset('m_D', data=m_D)
 hf.create_dataset('L_L', data=L_L)
@@ -123,7 +118,6 @@ hf.create_dataset('mu', data=m_diag)
 hf.create_dataset('M_X', data=M_X)
 hf.create_dataset('M_diag', data=masses)
 hf.create_dataset('mix', data=vectors)
-hf.create_dataset('VU', data=VU)
 hf.close()
 
 
