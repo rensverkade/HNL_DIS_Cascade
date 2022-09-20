@@ -12,10 +12,7 @@ from scipy import integrate as sint
 lhapdf.setPaths(['/home/rverkade/.local/share/lhapdf'])
 print(lhapdf.paths())
 ## Getting a PDF member object
-#p = lhapdf.mkPDF("CT10nlo", 0)
-#p = lhapdf.mkPDF("CT10nlo/0")
 p = lhapdf.mkPDF("CT18NLO/0")
-#pw = lhapdf.mkPDF("CT10wnlo/0")
 
 s2_W =0.22290 #sin_W^2
 ## Basic all-flavour PDF querying at x=0.01, Q=M_Z
@@ -24,19 +21,14 @@ s2_W =0.22290 #sin_W^2
 # 1, 2, 3, 4, 5, 6, 7, 8, 21
 # d, u, s, c, b, t, b', t', g
 
-#print(masses)
 hf = h5.File('/home/rverkade/Documents/BO_thesis/HNL_mass_pascoli_3.hdf5', 'r')
-N_masses = np.array(hf.get('M_diag'))
-mix = np.array(hf.get('mix'))
+N_masses = np.array(hf.get('M_diag')) #neutrino masses from diag
+mix = np.array(hf.get('mix'))  #mixing  matrix VU
 hf.close()
 #mix = mix[0,:,:]
-print(np.arange(0,10,1)[:3])
-#quit()
 V=np.zeros((8,8))
 Vert = np.zeros((4,3))
-#print(mix[0,:,:]*mix[0,:,:])
-#print(np.shape(mix))
-#quit()
+
 for l in range(4):  #Benchmark
     for z in range(3):  #HNL 1, 2 ,3
         V=np.zeros((8,8))
@@ -46,33 +38,7 @@ for l in range(4):  #Benchmark
                     #print('D',d)
                     V[i,j] =+ mix[l,d,i]*mix[l,d,j]    
         Vert[l,z] = np.sum(mix[l,2,:3])*np.sum(V[:3,3+z])/np.sqrt(np.sum(mix[l,:3,:3]**2))
-    if l==0:
-        print(V[3,3]**2)
-        print(V[4,3]**2)
-        print(V[5,3]**2)
         
-#Vert_5 = np.sum(mix[2,:3])*np.sum(V[:3,5])/np.sqrt(np.sum(mix[:3,:3]**2))
-#Vert_6 = np.sum(mix[2,:3])*np.sum(V[:3,6])/np.sqrt(np.sum(mix[:3,:3]**2))
-print(Vert[0,:]**2)
-print(Vert[1,:]**2)
-print(Vert[2,:]**2)
-
-xs_x = [x for x in np.logspace(-4, 0, 80)]
-qs_Q = [q for q in np.logspace(0, 4, 80)]
-xs_Q= np.array([10**-8,10**-6, 0.0001,0.01,0.1,0.2,0.5,0.8])
-qs_x = np.array([10,50,100,200,500,1000,2000,5000])
-qs_x2 = np.array([0.05,0.1,1,5,10,50,100,200,500])
-xs_Q2= np.array([10**-10,10**-9,10**-8,10**-6, 0.0001,0.01,0.1])
-gluon_xfs_x = np.zeros([len(qs_x), len(xs_x)])
-gluon_xfs_Q = np.zeros([len(xs_Q), len(qs_Q)]) #(8,80)
-l=len(xs_Q)
-print(l)
-k = len(xs_x)
-close = True
-colours = np.array(['r','b','g','orange','purple','pink','black','cyan'])
-#e_q = np.array([-1/3,2/3,-1/3,2/3,-1/3])
-e_q = np.array([1/3,2/3,1/3,2/3])
-
 
 #----------------
 ############
@@ -80,30 +46,33 @@ e_q = np.array([1/3,2/3,1/3,2/3])
 # F1 F2 FU #
 ############
 
-
+# LIST of PARAMETER values
+# we need to make so you can input these or
+#take them from the ones defined in DARKNEWS
+e_q = np.array([1/3,2/3,1/3,2/3]) #el charge of d,u,s,c
 G_F = 1.188*10**(-5) #GeV^-2
 M_W =  80.38 #GeV
 mp = 0.94 #GeV
 m_mu = 0.105 #GeV muon
 mN = 0.185 #GeV neutrino
-g_A = np.array([-0.5, 0.5,-0.5,0.5])
-g_V = g_A -2*e_q*s2_W
-R =0.3
+R =0.3 #Ratio for F_L calc
 R_1 = 1/R
-G_F = 1.188*10**(-5) #GeV^-2
+G_F = 1.188*10**(-5) #GeV^-2 Fermi constant
 M_W =  80.38 #GeV
 
-M_z = 91 #GeV
-g_A = np.array([-0.5, 0.5,-0.5,0.5])
+M_z = 91 #GeV Z-boson mass
+g_A = np.array([-0.5, 0.5,-0.5,0.5]) #coupling of quarks = isospin
 g_V = g_A -2*e_q*s2_W
-g_X_c = 0.32*4*np.pi
-X_c = 0.0003 #10^-4
-W = np.arcsin(np.sqrt(0.22290))
-M_Z2= 1.25 #GeV
-M_rat_2 =( M_Z2/M_z)**2
-v_f = 500 #MeV
-v_H = 265*10**3 #MeV
+g_X_c = 0.32*4*np.pi #dark coupling
+X_c = 0.0003 #10^-4 dark mixing
+W = np.arcsin(np.sqrt(0.22290)) #Weinberg mixing angle
+M_Z2= 1.25 #GeV Dark photon mass
+M_rat_2 =( M_Z2/M_z)**2  #ratio of Z and Z' mass
+v_f = 500 #MeV VEV of dark higgs
+v_H = 265*10**3 #MeV Higgs VEV
 g_g = M_z*2/v_H #=sqrt(g'^2+g^2)  
+
+#calc of geometric vals necessary for L_int calcs
 X = X_c
 g_X = g_X_c
 s_W = np.sin(W)
@@ -119,12 +88,9 @@ s_B = t_B*c_B
 
 
 
+# calculating the L_int vals for axial (A=True) and vectorial coupling
+def CCF_2_3(Q_e,Q_L,Q_X,A): 
 
-def CCF_2_3(Q_e,Q_L,Q_X,A):#ymu Z_mu for now only Left handed input
-    #mu = 2*g_X*v_f/(g_g*v_H)
-
-    #t_B =t_X*s_W #meaning NC Z'=0
-    #M_Z' = (1-swtx/tb) *M_Z_SM
     if A== False:              
         T_1 = e/(2*s_W*c_W) * ( -Q_L*(c_B+s_B*s_W*t_X)+2*Q_e*s_W*(-s_B*t_X + c_B*s_W))
         T_2 = g_X*Q_X*s_B/c_X #Z
@@ -138,24 +104,29 @@ def CCF_2_3(Q_e,Q_L,Q_X,A):#ymu Z_mu for now only Left handed input
         T_3 = e/(2*s_W*c_W) * ( -Q_L*(s_B-c_B*s_W*t_X)*c_B )
         T_4 = 0 #Z'
 
-    return(T_1 - T_2,T_3 -T_4)
-flavs = p.flavors()[1:-2]#d,u,s,c no excluding b and gluon
+    return(T_1 - T_2,T_3 -T_4) # Z and Z' int
+
+flavs = p.flavors()[1:-2]#d,u,s,c excluding b and gluon
 f_len = len(flavs)
 f_half = int(f_len*0.5)
 
 zeros = np.zeros(f_half)
 
-g_Z1_V,g_Z2_V =  CCF_2_3(e_q,g_A,zeros,A=False)
+################################################
+##Calculating the couplings                   ##
+## Vectorial and axial for Z (Z1) and Z' (Z2) ##
+################################################
+# Z-boson Z'-phot,charges: e,I3,Q_X, axiality
+g_Z1_V,g_Z2_V =  CCF_2_3(e_q,g_A,zeros,A=False) 
 g_Z1_A,g_Z2_A =  CCF_2_3(e_q,g_A,zeros,A=True)
     
-
 g_Z1_V_D,g_Z2_V_D =  CCF_2_3(0,0,1,A=False)
 g_Z1_A_D,g_Z2_A_D =  CCF_2_3(0,0,1,A=True)
 
 g_Z1_V_H,g_Z2_V_H =  CCF_2_3(1,0,0,A=False)
 g_Z1_A_H,g_Z2_A_H =  CCF_2_3(1,0,0,A=True)
 
-
+# structure functions calc, likely need to add interference lvls
 def struct_PDF(x,Q2):
     xf = np.array(p.xfxQ2(flavs, x, Q2)) #notice func of Q^2    quarks           anti-quarks
     #xf_g = np.array(p.xfxQ2(21, x, Q2))
@@ -175,7 +146,7 @@ G_F = 1.188*10**(-5) #GeV^-2
 mp = 0.94 #GeV
 M_W =  80.38 #GeV
 
-        
+#differential cross section, likely what DN needs       
 def ds_v(x,y,Vert,E,anti): #M is nucleon mass
     Q2 = x*y*2*mp*E
     if anti ==1:
@@ -190,6 +161,9 @@ def ds_v(x,y,Vert,E,anti): #M is nucleon mass
     #anti =1
     ds = (Vert*couple)**2  *mp*E/(np.pi*(M_Z2**2+Q2)**2) *(ds1+anti*ds2) 
     return ds
+#---------------------
+
+#integration and parsing of cross section
 def Cross_v(Vert,mN,E,anti):
     x_max =1
     y_max = 1
@@ -199,16 +173,18 @@ def Cross_v(Vert,mN,E,anti):
     #y_min = mN**4/(8*mp*x*E**3)
     
     sig = sint.dblquad(ds_v,x_min,x_max,lambda x: mN**4/(8*mp*x*E**3),y_max, args = (np.array([Vert,E,anti])))
-    #sig = sint.dblquad(ds_v,0.0001,1,0.00001,1, args = (np.array([E,anti])))
+    
     return sig #Gev^-2
-n= 20
+
+
+n= 20 #nr of energy evaluations
 E_nus = np.linspace(100,400,n)
 sigs_E = np.zeros((4,3,n))
 err_sigs_E = np.zeros((4,3,n))
 
 #N_masses[j,k+3] are in MeV
-for j in range(4):#bench
-    for k in range(3): #prod HNL
+for j in range(4):#benchmarks
+    for k in range(3): #HNL 4,5,6
         
         for i in range(n):
             sigs_E[j,k,i], err_sigs_E[j,k,i] = Cross_v(Vert[j,k],N_masses[j,k+3]*10**(-3),E_nus[i],1)
